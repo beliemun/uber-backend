@@ -7,6 +7,7 @@ import * as Joi from 'joi';
 import { UsersModule } from './users/users.module';
 import { CommonModule } from './common/common.module';
 import { User } from './users/entities/user.entity';
+import { JwtModule } from './jwt/jwt.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { User } from './users/entities/user.entity';
         DB_USERNAME: Joi.string().required(),
         DB_PAWSSWORD: Joi.string().required(),
         DB_NAME: Joi.string().required(),
+        TOKEN_SECRET_KEY: Joi.string().required(),
       }),
     }),
     GraphQLModule.forRoot({
@@ -42,6 +44,9 @@ import { User } from './users/entities/user.entity';
     }),
     CommonModule,
     UsersModule,
+    JwtModule.forRoot({
+      tokenSecretKey: process.env.TOKEN_SECRET_KEY,
+    }),
   ],
   controllers: [],
   providers: [],
