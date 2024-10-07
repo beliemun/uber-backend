@@ -1,5 +1,10 @@
 import { ApolloDriver } from '@nestjs/apollo';
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
@@ -8,6 +13,7 @@ import { UsersModule } from './users/users.module';
 import { CommonModule } from './common/common.module';
 import { User } from './users/entities/user.entity';
 import { JwtModule } from './jwt/jwt.module';
+import { jwtMiddleware } from './jwt/jwt.middleware';
 
 @Module({
   imports: [
@@ -51,4 +57,19 @@ import { JwtModule } from './jwt/jwt.module';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule  {}
+
+// 이하의 방법은 특정 path와 특정 method에 따라 middleware 설정을 하는 방법이며,
+// 모든 경로에서 모든 요청에 대해 받을 경우 main.ts에서 app.use(jwtMiddleware) 적용으로 대체될 수 있는 코드이다.
+// export class AppModule implements NestModule {
+//   // NestModule: middleware를 route에 적용하는 방법을 정의해주는 interface
+//   // NestModule은 interface로서 configure을 구현해야한다.
+//   configure(consumer: MiddlewareConsumer) {
+//     // 이 Middleware를 정확히 어떤 routes에 적용하고 싶은지 지정할 수 있다.
+//     // /graphl 경로 내 모든 요청에 대해서 jwtMiddleware를 거친도록 설정
+//     consumer.apply(jwtMiddleware).forRoutes({
+//       path:"/graphql",
+//       method:RequestMethod.ALL
+//     })
+//   }
+// }

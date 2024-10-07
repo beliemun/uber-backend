@@ -5,15 +5,18 @@ import {
   CreateAccountInput,
   CreateAccountOutput,
 } from './dto/create-account.dto';
-import { SignInInputType, SignInOutputType } from 'src/restaurants/dto/sign-in.dto';
+import {
+  SignInInputType,
+  SignInOutputType,
+} from 'src/restaurants/dto/sign-in.dto';
 
 @Resolver(() => User)
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
 
-  @Query(() => Boolean)
-  hi() {
-    return true;
+  @Query(() => User)
+  me() {
+    console.log('me()');
   }
 
   @Mutation(() => CreateAccountOutput)
@@ -23,10 +26,10 @@ export class UsersResolver {
     return this.usersService.createAccount(createAccountInput);
   }
 
-  @Mutation(()=>SignInOutputType)
+  @Mutation(() => SignInOutputType)
   signIn(
-    @Args('input') signInInputType :SignInInputType
-  ) : Promise<SignInOutputType> {
+    @Args('input') signInInputType: SignInInputType,
+  ): Promise<SignInOutputType> {
     return this.usersService.signIn(signInInputType);
   }
 }
