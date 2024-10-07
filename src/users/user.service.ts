@@ -85,4 +85,8 @@ export class UsersService {
       };
     }
   }
+
+  async findById(id:number) {
+    return this.users.findOne({where:{id}})
+  }
 }
