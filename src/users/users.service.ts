@@ -24,7 +24,7 @@ export class UsersService {
     private readonly users: Repository<User>,
     @InjectRepository(Verification)
     private readonly verifications: Repository<Verification>,
-    // private readonly config: ConfigService, // 글로벌 모듈이기 때문에 app.modlue.ts 에서 imports 할 필요가 없음.
+    // private readonly config: ConfigService, // 글로벌 모듈이기 때문에 app.modlue.ts에서 imports 할 필요가 없음.
     private readonly jwtService: JwtService,
   ) {}
 
