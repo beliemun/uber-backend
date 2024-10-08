@@ -6,13 +6,11 @@ import {
   CreateAccountInput,
   CreateAccountOutput,
 } from './dto/create-account.dto';
-import {
-  SignInInputType,
-  SignInOutputType,
-} from 'src/restaurants/dto/sign-in.dto';
+import { SignInInputType, SignInOutputType } from 'src/users/dto/sign-in.dto';
 import * as jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from 'src/jwt/jwt.service';
+import { EditProfileInput, EditProfileOutput } from './dto/edit-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -72,8 +70,8 @@ export class UsersService {
       //     { id: user.id },
       //     this.config.get('TOKEN_SECRET_KEY'),
       //   );
-      // 2. Jwt Dynamic Module을 직접만들어 가져올 수 있다. Config보다 불편하지만 다른 프로젝트에서 그대로 사용할 수 있다.   
-      const token = this.jwtService.sign({id:user.id})
+      // 2. Jwt Dynamic Module을 직접만들어 가져올 수 있다. Config보다 불편하지만 다른 프로젝트에서 그대로 사용할 수 있다.
+      const token = this.jwtService.sign({ id: user.id });
       return {
         ok: true,
         token,
@@ -86,7 +84,12 @@ export class UsersService {
     }
   }
 
-  async findById(id:number) {
-    return this.users.findOne({where:{id}})
+  async findById(id: number) {
+    return this.users.findOne({ where: { id } });
+  }
+
+  async editProfile({ id }: User, { email, password }: EditProfileInput) {
+    console.log(id, email, password);
+    return this.users.update(id, { email, password });
   }
 }
