@@ -5,14 +5,14 @@ import { CoreEntity } from 'src/common/entities/core.entity';
 import { User } from '../entities/user.entity';
 
 @InputType()
-export class UserProfileInput extends CoreEntity {
+export class GetUserProfileInput extends CoreEntity {
   @Field(() => Number)
   @IsNumber()
   userId: number;
 }
 
 @ObjectType()
-export class UserProfileOutput extends CoreOutput {
-    @Field(()=>User, {nullable:true})
-    user?:User
+export class GetUserProfileOutput extends CoreOutput {
+  @Field(() => User, { nullable: true })
+  user?: User;
 }

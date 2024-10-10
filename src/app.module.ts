@@ -15,6 +15,7 @@ import { User } from './users/entities/user.entity';
 import { JwtModule } from './jwt/jwt.module';
 import { JwtMiddleware } from './jwt/jwt.middleware';
 import { AuthModule } from './auth/auth.module';
+import { Verification } from './users/entities/verification.entity';
 
 @Module({
   imports: [
@@ -48,7 +49,7 @@ import { AuthModule } from './auth/auth.module';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', // 프로덕션에서는 실제 데이터를 가지고 있기 때문에 자동 마이그레이션이 되면 안 됨.
       logging: false,
-      entities: [User],
+      entities: [User, Verification],
     }),
     JwtModule.forRoot({
       tokenSecretKey: process.env.TOKEN_SECRET_KEY,
