@@ -163,6 +163,9 @@ export class UsersService {
         where: { code },
         relations: ['user'],
       });
+      if (!verifiation) {
+        throw new Error('Not found verification.');
+      }
       if (id !== verifiation.user.id) {
         throw new Error('Not have permission.');
       }

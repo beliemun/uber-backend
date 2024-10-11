@@ -5,13 +5,13 @@ import { User } from './entities/user.entity';
 import { Verification } from './entities/verification.entity';
 import { JwtService } from 'src/jwt/jwt.service';
 import { Repository } from 'typeorm';
-import exp from 'constants';
 
 const mockUsersRepository = () => ({
   findOne: jest.fn(),
   save: jest.fn(),
   create: jest.fn(),
   findOneOrFail: jest.fn(),
+  delete: jest.fn(),
 });
 
 const mockJwtService = () => ({
@@ -53,7 +53,6 @@ describe('Users Service', () => {
 
   it('be defined', async () => {
     expect(usersService).toBeDefined();
-    expect(jwtService).toBeDefined();
   });
 
   describe('createAccount()', () => {
@@ -229,10 +228,43 @@ describe('Users Service', () => {
       const result = await usersService.editProfile(1, {
         email: 'test@test.com',
       });
-      console.log(result);
       expect(result).toEqual({ ok: false, error: 'Can not update profile.' });
     });
   });
 
-  it.todo('verifyEmail()');
+  describe('verifyEmail()', () => {
+    const verification = {
+      id: 1,
+      user: { id: 1, verified: false },
+      code: 'code',
+    };
+
+    it('should fail on verification not found.', async () => {
+      verificationRepository.findOne.mockResolvedValue(undefined);
+      const result = await usersService.verifyEmail(1, { code: 'code' });
+      expect(result).toEqual({ ok: false, error: 'Not found verification.' });
+    });
+
+    it('should fail on permission not have.', async () => {
+      verificationRepository.findOne.mockResolvedValue(verification);
+      const result = await usersService.verifyEmail(2, { code: 'code' });
+      expect(result).toEqual({ ok: false, error: 'Not have permission.' });
+    });
+
+    it('should make a verification', async () => {
+      verificationRepository.findOne.mockResolvedValue(verification);
+      const result = await usersService.verifyEmail(verification.user.id, {
+        code: 'code',
+      });
+
+      expect(usersRepository.save).toHaveBeenCalledTimes(1);
+      expect(usersRepository.save).toHaveBeenCalledWith(verification.user);
+
+      expect(verificationRepository.delete).toHaveBeenCalledTimes(1);
+      expect(verificationRepository.delete).toHaveBeenCalledWith(
+        verification.id,
+      );
+      expect(result).toEqual({ ok: true });
+    });
+  });
 });
