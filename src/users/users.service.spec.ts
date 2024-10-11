@@ -205,7 +205,7 @@ describe('Users Service', () => {
       expect(result).toEqual({ ok: true });
     });
 
-    it('should chnage password', async () => {
+    it('should change password', async () => {
       const oldUser = {
         id: 1,
         password: '1234',
@@ -220,6 +220,17 @@ describe('Users Service', () => {
         password: '5678',
       });
       expect(result).toEqual({ ok: true });
+    });
+
+    it('should fail on exception.', async () => {
+      usersRepository.findOne.mockRejectedValue(
+        new Error('Can not update profile.'),
+      );
+      const result = await usersService.editProfile(1, {
+        email: 'test@test.com',
+      });
+      console.log(result);
+      expect(result).toEqual({ ok: false, error: 'Can not update profile.' });
     });
   });
 

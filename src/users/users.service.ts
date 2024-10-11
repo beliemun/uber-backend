@@ -128,23 +128,30 @@ export class UsersService {
     id: number,
     { email, password }: EditProfileInput,
   ): Promise<EditProfileOutput> {
-    // update는 Entity를 직접 update 하지 않고, DB에 query만 보내기 때문에 @BeforeUpdate()을 작동시키지 않는다.
-    // return this.users.update(id, { email, password });
+    try {
+      // update는 Entity를 직접 update 하지 않고, DB에 query만 보내기 때문에 @BeforeUpdate()을 작동시키지 않는다.
+      // return this.users.update(id, { email, password });
 
-    // 따라서 save를 통해 직접 Entity를 update해주는 코드로 변경.
-    const user = await this.users.findOne({ where: { id } });
-    if (email) {
-      user.email = email;
-      user.verified = false;
-      await this.verifications.save(this.verifications.create({ user }));
+      // 따라서 save를 통해 직접 Entity를 update해주는 코드로 변경.
+      const user = await this.users.findOne({ where: { id } });
+      if (email) {
+        user.email = email;
+        user.verified = false;
+        await this.verifications.save(this.verifications.create({ user }));
+      }
+      if (password) {
+        user.password = password;
+      }
+      await this.users.save(user);
+      return {
+        ok: true,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e.message,
+      };
     }
-    if (password) {
-      user.password = password;
-    }
-    await this.users.save(user);
-    return {
-      ok: true,
-    };
   }
 
   async verifyEmail(
