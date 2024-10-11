@@ -4,6 +4,8 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Verification } from './entities/verification.entity';
 import { JwtService } from 'src/jwt/jwt.service';
+import { Repository } from 'typeorm';
+import { Server } from 'http';
 
 const mokeRepository = {
   findOne: jest.fn(),
@@ -16,8 +18,11 @@ const mokeJwtService = {
   verify: jest.fn(),
 };
 
+type MokeRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
+
 describe('Users Service', () => {
-  let service: UsersService;
+  let usersService: UsersService;
+  let usersRepository: MokeRepository<User>;
 
   beforeAll(async () => {
     const modules = await Test.createTestingModule({
@@ -33,17 +38,38 @@ describe('Users Service', () => {
         },
         {
           provide: JwtService,
-          useValue:mokeJwtService,
-        }
+          useValue: mokeJwtService,
+        },
       ],
     }).compile();
-    service = modules.get<UsersService>(UsersService);
+    usersService = modules.get<UsersService>(UsersService);
+    usersRepository = modules.get(getRepositoryToken(User));
   });
 
-  it('be defined', () => {
-    expect(service).toBeDefined();
+  it('be defined', async () => {
+    expect(usersService).toBeDefined();
   });
-  it.todo('createAccount()');
+
+  describe('createAccount()', () => {
+    it('should fail if user exists', async () => {
+      usersRepository.findOne.mockResolvedValue({
+        id: 1,
+        email: 'mock@test.com',
+        name: 'tester',
+      });
+      const result = await usersService.createAccount({
+        email: '',
+        name: '',
+        password: '',
+        role: 0,
+      });
+      expect(result).toMatchObject({
+        ok: false,
+        error: 'There is a user with that email already.',
+      });
+    });
+  });
+
   it.todo('signIn()');
   it.todo('findById()');
   it.todo('getUserProfile()');

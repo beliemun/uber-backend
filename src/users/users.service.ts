@@ -36,6 +36,7 @@ export class UsersService {
   }: CreateAccountInput): Promise<CreateAccountOutput> {
     try {
       const exists = await this.users.findOne({ where: { email } });
+      console.log(exists);
       if (exists) {
         return {
           ok: false,
@@ -45,10 +46,9 @@ export class UsersService {
       const user = await this.users.save(
         this.users.create({ name, email, password, role }),
       );
-      const verifications = await this.verifications.save(
+      await this.verifications.save(
         this.verifications.create({ user }),
       );
-      console.log(verifications);
       return {
         ok: true,
       };
