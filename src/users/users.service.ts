@@ -6,15 +6,15 @@ import {
   CreateAccountInput,
   CreateAccountOutput,
 } from './dto/create-account.dto';
-import { SignInInputType, SignInOutputType } from 'src/users/dto/sign-in.dto';
-import * as jwt from 'jsonwebtoken';
-import { ConfigService } from '@nestjs/config';
+import { SignInInput, SignInOutput } from 'src/users/dto/sign-in.dto';
 import { JwtService } from 'src/jwt/jwt.service';
-import { EditProfileInput } from './dto/edit-profile.dto';
+import { EditProfileInput, EditProfileOutput } from './dto/edit-profile.dto';
 import { Verification } from './entities/verification.entity';
-import { error } from 'console';
-import { VerifyEmailInput } from './dto/verify-email.dto';
-import { GetUserProfileInput } from './dto/get-user-profile.dto';
+import { VerifyEmailInput, VerifyEmailOutput } from './dto/verify-email.dto';
+import {
+  GetUserProfileInput,
+  GetUserProfileOutput,
+} from './dto/get-user-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -36,19 +36,13 @@ export class UsersService {
   }: CreateAccountInput): Promise<CreateAccountOutput> {
     try {
       const exists = await this.users.findOne({ where: { email } });
-      console.log(exists);
       if (exists) {
-        return {
-          ok: false,
-          error: 'There is a user with that email already.',
-        };
+        throw new Error('There is a user with that email already.');
       }
       const user = await this.users.save(
         this.users.create({ name, email, password, role }),
       );
-      await this.verifications.save(
-        this.verifications.create({ user }),
-      );
+      await this.verifications.save(this.verifications.create({ user }));
       return {
         ok: true,
       };
@@ -60,27 +54,18 @@ export class UsersService {
     }
   }
 
-  async signIn({
-    email,
-    password,
-  }: SignInInputType): Promise<SignInOutputType> {
+  async signIn({ email, password }: SignInInput): Promise<SignInOutput> {
     try {
       const user = await this.users.findOne({
         where: { email },
         select: ['id', 'password'],
       });
       if (!user) {
-        return {
-          ok: false,
-          error: 'Not found user.',
-        };
+        throw new Error('Not found user.');
       }
       const isCorrect = await user.checkPassword(password);
       if (!isCorrect) {
-        return {
-          ok: false,
-          error: 'Password is not correct.',
-        };
+        throw new Error('Password is not correct.');
       }
       // 1. process.env.TOKEN_SECRET_KEY를 사용하지 않고 Config에서 가져 올 수 있다.
       //   const token = jwt.sign(
@@ -102,43 +87,14 @@ export class UsersService {
   }
 
   async findById(id: number) {
-    return this.users.findOne({ where: { id } });
-  }
-
-  async getUserProfile({ userId }: GetUserProfileInput) {
     try {
-      const user = await this.findById(userId);
-      return {
-        ok: user ? true : false,
-        user,
-        ...(!user && { error: 'User not found' }),
-      };
-    } catch (e) {
-      return {
-        ok: false,
-        error: e.meesage,
-      };
-    }
-  }
-
-  async editProfile({ id }: User, { email, password }: EditProfileInput) {
-    try {
-      // update는 Entity를 직접 update 하지 않고, DB에 query만 보내기 때문에 @BeforeUpdate()을 작동시키지 않는다.
-      // return this.users.update(id, { email, password });
-
-      // 따라서 save를 통해 직접 Entity를 update해주는 코드로 변경.
-      const user = await this.users.findOne({ where: { id } });
-      if (email) {
-        user.email = email;
-        user.verified = false;
-        await this.verifications.save(this.verifications.create({ user }));
+      const user = await this.users.findOneOrFail({ where: { id } });
+      if (!user) {
+        throw new Error('User not found.');
       }
-      if (password) {
-        user.password = password;
-      }
-      await this.users.save(user);
       return {
         ok: true,
+        user,
       };
     } catch (e) {
       return {
@@ -148,17 +104,60 @@ export class UsersService {
     }
   }
 
-  async verifyEmail({ id }: User, { code }: VerifyEmailInput) {
+  async getUserProfile({
+    userId,
+  }: GetUserProfileInput): Promise<GetUserProfileOutput> {
+    try {
+      const { user } = await this.findById(userId);
+      if (!user) {
+        throw new Error('User not found.');
+      }
+      return {
+        ok: true,
+        user: user,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e.message,
+      };
+    }
+  }
+
+  async editProfile(
+    id: number,
+    { email, password }: EditProfileInput,
+  ): Promise<EditProfileOutput> {
+    // update는 Entity를 직접 update 하지 않고, DB에 query만 보내기 때문에 @BeforeUpdate()을 작동시키지 않는다.
+    // return this.users.update(id, { email, password });
+
+    // 따라서 save를 통해 직접 Entity를 update해주는 코드로 변경.
+    const user = await this.users.findOne({ where: { id } });
+    if (email) {
+      user.email = email;
+      user.verified = false;
+      await this.verifications.save(this.verifications.create({ user }));
+    }
+    if (password) {
+      user.password = password;
+    }
+    await this.users.save(user);
+    return {
+      ok: true,
+    };
+  }
+
+  async verifyEmail(
+    id: number,
+    { code }: VerifyEmailInput,
+  ): Promise<VerifyEmailOutput> {
     try {
       const verifiation = await this.verifications.findOne({
         where: { code },
         relations: ['user'],
       });
       if (id !== verifiation.user.id) {
-        return {
-          ok: false,
-          error: 'Not have permission.',
-        };
+        throw new Error('Not have permission.');
       }
       if (verifiation) {
         verifiation.user.verified = true;

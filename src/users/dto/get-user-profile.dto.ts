@@ -5,7 +5,7 @@ import { CoreEntity } from 'src/common/entities/core.entity';
 import { User } from '../entities/user.entity';
 
 @InputType()
-export class GetUserProfileInput extends CoreEntity {
+export class GetUserProfileInput {
   @Field(() => Number)
   @IsNumber()
   userId: number;

@@ -5,7 +5,7 @@ import {
   CreateAccountInput,
   CreateAccountOutput,
 } from './dto/create-account.dto';
-import { SignInInputType, SignInOutputType } from 'src/users/dto/sign-in.dto';
+import { SignInInput, SignInOutput } from 'src/users/dto/sign-in.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { UseGuards } from '@nestjs/common';
 import { AuthUser } from 'src/auth/auth-user.decorator';
@@ -27,10 +27,10 @@ export class UsersResolver {
     return authUser;
   }
 
-  @Mutation(() => SignInOutputType)
+  @Mutation(() => SignInOutput)
   signIn(
-    @Args('input') signInInputType: SignInInputType,
-  ): Promise<SignInOutputType> {
+    @Args('input') signInInputType: SignInInput,
+  ): Promise<SignInOutput> {
     return this.usersService.signIn(signInInputType);
   }
 
@@ -55,7 +55,7 @@ export class UsersResolver {
     @AuthUser() authUser: User,
     @Args('input') editProfileInput: EditProfileInput,
   ): Promise<EditProfileOutput> {
-    return this.usersService.editProfile(authUser, editProfileInput);
+    return this.usersService.editProfile(authUser.id, editProfileInput);
   }
 
   @Mutation(() => VerifyEmailOutput)
@@ -63,6 +63,6 @@ export class UsersResolver {
     @AuthUser() authUser: User,
     @Args('input') verifyEmailInput: VerifyEmailInput,
   ): Promise<VerifyEmailOutput> {
-    return this.usersService.verifyEmail(authUser, verifyEmailInput);
+    return this.usersService.verifyEmail(authUser.id, verifyEmailInput);
   }
 }
