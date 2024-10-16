@@ -27,7 +27,7 @@ export class User extends CoreEntity {
   @IsString()
   name: string;
 
-  @Column()
+  @Column({ unique: true })
   @Field(() => String)
   @IsEmail()
   email: string;

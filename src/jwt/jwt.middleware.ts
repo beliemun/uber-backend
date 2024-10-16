@@ -1,4 +1,4 @@
-import { Inject, Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import { JwtService } from './jwt.service';
 import { UsersService } from 'src/users/users.service';
@@ -16,10 +16,12 @@ export class JwtMiddleware implements NestMiddleware {
       try {
         const decoded = this.jwtService.verify(token.toString());
         if (typeof decoded === 'object' && decoded.hasOwnProperty('id')) {
-          const result = await this.usersService.findById(decoded['id']);
+          const { ok, user } = await this.usersService.findById(decoded['id']);
           // user라는 request property에 찾아낸 user를 담는다.
           // request에 담긴 user는 graphql context에 의해 모든 resolver에서 공유된다. (app.module.ts)
-          req['user'] = result.user;
+          if (ok) {
+            req['user'] = user;
+          }
         }
       } catch (e) {}
     }

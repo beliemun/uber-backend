@@ -135,6 +135,12 @@ export class UsersService {
       // 따라서 save를 통해 직접 Entity를 update해주는 코드로 변경.
       const user = await this.users.findOne({ where: { id } });
       if (email) {
+        const exist = await this.users.findOne({ where: { email } });
+        console.log('exist', exist);
+        if (exist) {
+          throw new Error('The email is already exist.');
+        }
+
         user.email = email;
         user.verified = false;
         await this.verifications.save(this.verifications.create({ user }));

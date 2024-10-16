@@ -3,17 +3,18 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { DataSource, Repository } from 'typeorm';
-import { query } from 'express';
-import { sign } from 'crypto';
 import { User } from 'src/users/entities/user.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Verification } from 'src/users/entities/verification.entity';
 
 const GRAPHQL_ENDPOINT = '/graphql';
 
 describe('UserModule (e2e)', () => {
   let app: INestApplication;
-  let token: String;
   let usersRepository: Repository<User>;
+  let token: String;
+  let verificationRepository: Repository<Verification>;
+  let code: String;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -23,6 +24,9 @@ describe('UserModule (e2e)', () => {
     app = moduleFixture.createNestApplication();
     usersRepository = moduleFixture.get<Repository<User>>(
       getRepositoryToken(User),
+    );
+    verificationRepository = moduleFixture.get<Repository<Verification>>(
+      getRepositoryToken(Verification),
     );
 
     await app.init();
@@ -206,6 +210,13 @@ describe('UserModule (e2e)', () => {
     beforeAll(async () => {
       const [user] = await usersRepository.find();
       userId = user.id;
+      console.log('userId:', userId);
+
+      const verification = await verificationRepository.findOne({
+        where: { user: { id: userId } },
+      });
+      code = verification.code;
+      console.log('code:', code);
     });
 
     it('should find an user.', () => {
@@ -276,9 +287,205 @@ describe('UserModule (e2e)', () => {
   });
 
   describe('me', () => {
-    it.todo('');
+    let userId: number;
+
+    beforeAll(async () => {
+      const [user] = await usersRepository.find();
+      userId = user.id;
+    });
+
+    it('should find my profile', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .set('accessToken', token.toString())
+        .send({
+          query: `
+          {
+            me{
+              id
+            }
+          }`,
+        })
+        .expect(200)
+        .expect((res) => {
+          const {
+            body: {
+              data: {
+                me: { id },
+              },
+            },
+          } = res;
+          expect(id).toEqual(userId);
+        });
+    });
+
+    it('should not find my profile', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .set('accessToekn', token.toString())
+        .send({
+          query: `
+          {
+            me{
+              id
+            }
+          }`,
+        })
+        .expect(200)
+        .expect((res) => {
+          const {
+            errors: [{ message }],
+            data,
+          } = res.body;
+          expect(message).toBe('Forbidden resource');
+          expect(data).toBe(null);
+        });
+    });
   });
 
-  it.todo('edtiProfile');
-  it.todo('verifyEmail');
+  describe('verifyEmail', () => {
+    it('should change verified status to true.', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .set('accessToken', token.toString())
+        .send({
+          query: `
+          mutation {
+            verifyEmail(
+              input: {
+                code: "${code}"
+              }
+            ) {
+              ok
+              error
+            }
+          }`,
+        })
+        .expect(200)
+        .expect((res) => {
+          const {
+            data: {
+              verifyEmail: { ok, error },
+            },
+          } = res.body;
+          expect(ok).toBe(true);
+          expect(error).toBe(null);
+        });
+    });
+
+    it('should not change verified status with a wrong code.', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .set('accessToken', token.toString())
+        .send({
+          query: `
+          mutation {
+            verifyEmail(
+              input: {
+                code: "wrong-code"
+              }
+            ) {
+              ok
+              error
+            }
+          }`,
+        })
+        .expect(200)
+        .expect((res) => {
+          const {
+            data: {
+              verifyEmail: { ok, error },
+            },
+          } = res.body;
+          expect(ok).toBe(false);
+          expect(error).toBe('Not found verification.');
+        });
+    });
+
+    it('should not change verified status with a wrong credential.', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .send({
+          query: `
+          mutation {
+            verifyEmail(
+              input: {
+                 code: "${code}"
+              }
+            ) {
+              ok
+              error
+            }
+          }`,
+        })
+        .expect(200)
+        .expect((res) => {
+          const {
+            errors: [{ message }],
+          } = res.body;
+          expect(message).toBe(
+            "Cannot read properties of undefined (reading 'id')",
+          );
+        });
+    });
+  });
+
+  describe('editProfile', () => {
+    it('should fail if the email exist.', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .set('accessToken', token.toString())
+        .send({
+          query: `
+          mutation{
+            editProfile(input:{
+              email:"test@test.com"
+            }) {
+              ok
+              error
+            }
+          }
+        `,
+        })
+        .expect(200)
+        .expect((res) => {
+          console.log(res.body);
+          const {
+            data: {
+              editProfile: { ok, error },
+            },
+          } = res.body;
+          expect(ok).toBe(false);
+          expect(error).toBe('The email is already exist.');
+        });
+    });
+
+    it('should edit email in my profile', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .set('accessToken', token.toString())
+        .send({
+          query: `
+          mutation{
+            editProfile(input:{
+              email:"test1@test.com"
+            }) {
+              ok
+              error
+            }
+          }
+        `,
+        })
+        .expect(200)
+        .expect((res) => {
+          const {
+            data: {
+              editProfile: { ok, error },
+            },
+          } = res.body;
+          expect(ok).toBe(true);
+          expect(error).toBe(null);
+        });
+    });
+  });
 });
