@@ -2,15 +2,18 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { query } from 'express';
 import { sign } from 'crypto';
+import { User } from 'src/users/entities/user.entity';
+import { getRepositoryToken } from '@nestjs/typeorm';
 
 const GRAPHQL_ENDPOINT = '/graphql';
 
 describe('UserModule (e2e)', () => {
   let app: INestApplication;
   let token: String;
+  let usersRepository: Repository<User>;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -18,6 +21,10 @@ describe('UserModule (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    usersRepository = moduleFixture.get<Repository<User>>(
+      getRepositoryToken(User),
+    );
+
     await app.init();
   });
 
@@ -104,7 +111,7 @@ describe('UserModule (e2e)', () => {
   });
 
   describe('signIn', () => {
-    it('should sign in with correct credentials', () => {
+    it('should sign in with correct credentials.', () => {
       return request(app.getHttpServer())
         .post(GRAPHQL_ENDPOINT)
         .send({
@@ -134,7 +141,7 @@ describe('UserModule (e2e)', () => {
         });
     });
 
-    it('should fail with wrong email', () => {
+    it('should fail with wrong email.', () => {
       return request(app.getHttpServer())
         .post(GRAPHQL_ENDPOINT)
         .send({
@@ -163,7 +170,7 @@ describe('UserModule (e2e)', () => {
         });
     });
 
-    it('should fail with wrong password', () => {
+    it('should fail with wrong password.', () => {
       return request(app.getHttpServer())
         .post(GRAPHQL_ENDPOINT)
         .send({
@@ -194,10 +201,84 @@ describe('UserModule (e2e)', () => {
   });
 
   describe('userProfile', () => {
-    
+    let userId: number;
+
+    beforeAll(async () => {
+      const [user] = await usersRepository.find();
+      userId = user.id;
+    });
+
+    it('should find an user.', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .set('accessToken', token.toString())
+        .send({
+          query: `
+            {
+              userProfile(input:{userId:${userId}}){
+                ok
+                error
+                user {
+                  id
+                }
+              }
+            }`,
+        })
+        .expect(200)
+        .expect((res) => {
+          const {
+            body: {
+              data: {
+                userProfile: {
+                  ok,
+                  error,
+                  user: { id },
+                },
+              },
+            },
+          } = res;
+          expect(ok).toBe(true);
+          expect(error).toBe(null);
+          expect(id).toBe(userId);
+        });
+    });
+
+    it('should not find any user.', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .set('accessToken', token.toString())
+        .send({
+          query: `
+          {
+            userProfile(input:{userId:${11}}){
+              ok
+              error
+              user {
+                id
+              }
+            }
+          }`,
+        })
+        .expect(200)
+        .expect((res) => {
+          const {
+            body: {
+              data: {
+                userProfile: { ok, error, user },
+              },
+            },
+          } = res;
+          expect(ok).toBe(false);
+          expect(error).toBe('User not found.');
+          expect(user).toBe(null);
+        });
+    });
   });
 
-  it.todo('me');
+  describe('me', () => {
+    it.todo('');
+  });
+
   it.todo('edtiProfile');
   it.todo('verifyEmail');
 });

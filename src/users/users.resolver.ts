@@ -28,9 +28,7 @@ export class UsersResolver {
   }
 
   @Mutation(() => SignInOutput)
-  signIn(
-    @Args('input') signInInputType: SignInInput,
-  ): Promise<SignInOutput> {
+  signIn(@Args('input') signInInputType: SignInInput): Promise<SignInOutput> {
     return this.usersService.signIn(signInInputType);
   }
 
