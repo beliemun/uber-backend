@@ -1,24 +1,38 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { IsOptional, IsString } from 'class-validator';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { CoreEntity } from 'src/common/entities/core.entity';
+import { Column, Entity, ManyToOne } from 'typeorm';
+import { Category } from './category.entity';
+import { User } from 'src/users/entities/user.entity';
 
-@InputType({ isAbstract: true })
+// Ralation 연결 시 외부에서 Category가 Class인지, InputType인지, OutputType인지 알 수 없으므로 이름을 따로 정해준다.
+@InputType('RestaurantInputType', { isAbstract: true })
 @ObjectType()
 @Entity()
-export class Restaurant {
-  @PrimaryGeneratedColumn()
-  @Field(() => Number)
-  @IsString()
-  id: number;
-
+export class Restaurant extends CoreEntity {
   @Column()
   @Field(() => String)
   @IsString()
   name: string;
 
   @Column()
+  @Field(() => String)
+  @IsString()
+  coverImage: string;
+
+  @Column()
   @Field(() => String, { nullable: true })
   @IsString()
   @IsOptional()
   address?: string;
+
+  @ManyToOne(() => Category, (category) => category.restaurants, {
+    onDelete: 'SET NULL',
+  })
+  @Field(() => Category, { nullable: true })
+  category?: Category;
+
+  @ManyToOne(() => User, (owner) => owner.restaurants)
+  @Field(() => User)
+  owner: User;
 }

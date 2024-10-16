@@ -5,10 +5,11 @@ import {
   registerEnumType,
 } from '@nestjs/graphql';
 import { CoreEntity } from 'src/common/entities/core.entity';
-import { BeforeInsert, BeforeUpdate, Column, Entity } from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from '@nestjs/common';
 import { IsBoolean, IsEmail, IsEnum, IsString } from 'class-validator';
+import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
 
 enum UserRole {
   Client,
@@ -18,7 +19,8 @@ enum UserRole {
 
 registerEnumType(UserRole, { name: 'UserRole' }); // graphql에 enum을 등록하는 방법
 
-@InputType({ isAbstract: true }) // for Graphql
+// Ralation 연결 시 외부에서 Category가 Class인지, InputType인지, OutputType인지 알 수 없으므로 이름을 따로 정해준다.
+@InputType('UserInputType', { isAbstract: true }) // for Graphql
 @ObjectType() // for Graphql
 @Entity() // for Database
 export class User extends CoreEntity {
@@ -46,6 +48,10 @@ export class User extends CoreEntity {
   @Field(() => Boolean, { defaultValue: false })
   @IsBoolean()
   verified: boolean;
+
+  @OneToMany(() => Restaurant, (restaurant) => restaurant.owner)
+  @Field(() => [Restaurant])
+  restaurants: Restaurant[];
 
   @BeforeInsert()
   @BeforeUpdate()
