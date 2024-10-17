@@ -17,7 +17,12 @@ export class Category extends CoreEntity {
   @Column()
   @Field(() => String)
   @IsString()
-  coverImage: string;
+  slug: string;
+
+  @Column({ nullable: true })
+  @Field(() => String, { nullable: true })
+  @IsString()
+  coverImage?: string;
 
   @OneToMany(() => Restaurant, (rastaurant) => rastaurant.category)
   @Field(() => [Restaurant])

@@ -1,13 +1,11 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 import { UsersService } from './users.service';
 import {
   CreateAccountInput,
   CreateAccountOutput,
 } from './dto/create-account.dto';
 import { SignInInput, SignInOutput } from 'src/users/dto/sign-in.dto';
-import { AuthGuard } from 'src/auth/auth.guard';
-import { UseGuards } from '@nestjs/common';
 import { AuthUser } from 'src/auth/auth-user.decorator';
 import {
   GetUserProfileInput,
@@ -15,13 +13,14 @@ import {
 } from './dto/get-user-profile.dto';
 import { EditProfileInput, EditProfileOutput } from './dto/edit-profile.dto';
 import { VerifyEmailInput, VerifyEmailOutput } from './dto/verify-email.dto';
+import { Role } from 'src/auth/role.decorator';
 
 @Resolver(() => User)
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
 
-  @Query(() => User)
-  @UseGuards(AuthGuard) // AuthGuard(auth.guard)를 만들어 UseGuards와 함께 사용하는 authentication.
+  @Role('Any')
+  @Query(() => User) // AuthGuard(auth.guard)를 만들어 UseGuards와 함께 사용하는 authentication.
   me(@AuthUser() authUser: User) {
     // 직접 Decorator를 생성(auth-user.decorator.ts)하여 사용하는 authentication.
     return authUser;
@@ -39,7 +38,7 @@ export class UsersResolver {
     return this.usersService.createAccount(createAccountInput);
   }
 
-  @UseGuards(AuthGuard)
+  @Role('Any')
   @Query(() => GetUserProfileOutput)
   async userProfile(
     @Args('input') GetUserProfileInput: GetUserProfileInput,
@@ -47,7 +46,7 @@ export class UsersResolver {
     return this.usersService.getUserProfile(GetUserProfileInput);
   }
 
-  @UseGuards(AuthGuard)
+  @Role('Any')
   @Mutation(() => EditProfileOutput)
   editProfile(
     @AuthUser() authUser: User,
