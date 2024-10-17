@@ -13,18 +13,22 @@ export class AuthGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const roles = this.reflecter.get<UserRoles>('roles', context.getHandler());
+    // Role을 위한 Decorator가 없을 경우 Pulbic End point 라고 간주하고 통과시킨다.
     if (roles === undefined) {
       return true;
     }
     // context를 로그해보면 context가 http 형태로로 되어있기 때문에 graphql로 변경해야 함. (context의 user, token에 접근할 수 없는 형태.)
     const gqlContext = GqlExecutionContext.create(context).getContext();
     const user: User = gqlContext['user'];
+    // Role Decorator가 있는데 User 정보가 없을 경우
     if (!user) {
       return false;
     }
+    // Role이 Any인 경우, 모든 유저에 대해 인가가 허락된다.
     if (roles === 'Any') {
       return true;
     }
+    // Decorator에 명시한 Role과 user의 role을 비교하여 인가를 허락하거나 거부한다.
     return roles.includes(user.role);
   }
 }
