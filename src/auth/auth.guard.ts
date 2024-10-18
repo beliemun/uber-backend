@@ -12,6 +12,7 @@ export class AuthGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
+    // key를 'roles' 이라고 정의한 Metadata를 가져온다.
     const roles = this.reflecter.get<UserRoles>('roles', context.getHandler());
     // Role을 위한 Decorator가 없을 경우 Pulbic End point 라고 간주하고 통과시킨다.
     if (roles === undefined) {
