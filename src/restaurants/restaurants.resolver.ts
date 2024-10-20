@@ -7,7 +7,7 @@ import {
 } from './dto/create-restaurant.dto';
 import { RestaurantService } from './restaurant.service';
 import { AuthUser } from 'src/auth/auth-user.decorator';
-import { User, UserRole } from 'src/users/entities/user.entity';
+import { User } from 'src/users/entities/user.entity';
 import { Role } from 'src/auth/role.decorator';
 
 @Resolver(() => Restaurant)
