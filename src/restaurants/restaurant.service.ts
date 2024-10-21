@@ -22,12 +22,17 @@ import {
   SearchRestaurantsOutput,
 } from './dto/search-restaurant.dto';
 import { CreateDishInput, CreateDishOutput } from './dto/create-dish.dto';
+import { Dish } from './entities/dish.entity';
+import { EditDishInput, EditDishOutput } from './dto/edit-dish.dto';
+import { DeleteDishInput, DeleteDishOutput } from './dto/delete-dish.dto';
 
 @Injectable()
 export class RestaurantsService {
   constructor(
     @InjectRepository(Restaurant)
     private readonly restaurants: Repository<Restaurant>,
+    @InjectRepository(Dish)
+    private readonly dishes: Repository<Dish>,
     private readonly categories: CategoryRepository,
   ) {}
 
@@ -244,9 +249,87 @@ export class RestaurantsService {
   }
 
   async createDish(
+    owner: User,
     createDishInput: CreateDishInput,
   ): Promise<CreateDishOutput> {
     try {
+      const restaurant = await this.restaurants.findOne({
+        where: { id: createDishInput.restaurantId },
+      });
+      if (!restaurant) {
+        throw new Error('Dish not found.');
+      }
+      if (owner.id !== restaurant.ownerId) {
+        throw new Error(
+          "You can't create a dish in a restaurant that you don't own.",
+        );
+      }
+      await this.dishes.save(
+        this.dishes.create({ ...createDishInput, restaurant }),
+      );
+      return {
+        ok: true,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e.message,
+      };
+    }
+  }
+
+  async editDish(
+    owner: User,
+    editDishInput: EditDishInput,
+  ): Promise<EditDishOutput> {
+    try {
+      const dish = await this.dishes.findOne({
+        where: { id: editDishInput.dishId },
+      });
+      if (!dish) {
+        throw new Error('Dish not found.');
+      }
+      const restaurant = await this.restaurants.findOne({
+        where: { id: dish.restaurantId },
+        select: ['ownerId'],
+      });
+      if (owner.id !== restaurant.ownerId) {
+        throw new Error("You can't do that.");
+      }
+      await this.dishes.save({
+        id: editDishInput.dishId,
+        ...editDishInput,
+      });
+      return {
+        ok: true,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e.message,
+      };
+    }
+  }
+
+  async deleteDish(
+    owner: User,
+    { dishId }: DeleteDishInput,
+  ): Promise<DeleteDishOutput> {
+    try {
+      const dish = await this.dishes.findOne({
+        where: { id: dishId },
+      });
+      if (!dish) {
+        throw new Error('Dish not found.');
+      }
+      const restaurant = await this.restaurants.findOne({
+        where: { id: dish.restaurantId },
+        select: ['ownerId'],
+      });
+      if (owner.id !== restaurant.ownerId) {
+        throw new Error("You can't do that.");
+      }
+      await this.dishes.delete(dishId);
       return {
         ok: true,
       };

@@ -9,9 +9,10 @@ import { Restaurant } from './entities/restaurant.entity';
 import { RestaurantsService } from './restaurant.service';
 import { Category } from './entities/category.entity';
 import { CategoryRepository } from './repositories/category.repository';
+import { Dish } from './entities/dish.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Restaurant, Category])],
+  imports: [TypeOrmModule.forFeature([Restaurant, Category, Dish])],
   providers: [
     RestaurantsResolver,
     RestaurantsService,

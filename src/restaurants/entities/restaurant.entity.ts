@@ -37,7 +37,9 @@ export class Restaurant extends CoreEntity {
   @Field(() => User)
   owner: User;
 
+  @Column() // Column 지정을 안할 경우, select를 사용할 수 없음, 사용하지 않고 select를 하기 위해서는 createQueryBuilder를 사용해야 함.
   @RelationId((restaurant: Restaurant) => restaurant.owner)
+  @Field(() => Number)
   ownerId: number;
 
   @OneToMany(() => Dish, (dish) => dish.restaurant)
