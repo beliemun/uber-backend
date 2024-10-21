@@ -18,6 +18,7 @@ import { Restaurant } from './restaurants/entities/restaurant.entity';
 import { Category } from './restaurants/entities/category.entity';
 import { RestaurantsModule } from './restaurants/restaurants.module';
 import { AuthModule } from './auth/auth.module';
+import { Dish } from './restaurants/entities/dish.entity';
 
 @Module({
   imports: [
@@ -51,7 +52,7 @@ import { AuthModule } from './auth/auth.module';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', // 프로덕션에서는 실제 데이터를 가지고 있기 때문에 자동 마이그레이션이 되면 안 됨.
       logging: false,
-      entities: [User, Verification, Restaurant, Category],
+      entities: [User, Verification, Restaurant, Category, Dish],
     }),
     JwtModule.forRoot({
       tokenSecretKey: process.env.TOKEN_SECRET_KEY,

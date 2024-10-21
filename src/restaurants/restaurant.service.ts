@@ -21,9 +21,10 @@ import {
   SearchRestaurantsInput,
   SearchRestaurantsOutput,
 } from './dto/search-restaurant.dto';
+import { CreateDishInput, CreateDishOutput } from './dto/create-dish.dto';
 
 @Injectable()
-export class RestaurantService {
+export class RestaurantsService {
   constructor(
     @InjectRepository(Restaurant)
     private readonly restaurants: Repository<Restaurant>,
@@ -120,7 +121,9 @@ export class RestaurantService {
     try {
       const restaurant = await this.restaurants.findOne({
         where: { id: restaurantId },
+        relations: ['menu'],
       });
+      console.log(restaurant);
       if (!restaurant) {
         throw new Error('Restaurant not found.');
       }
@@ -238,5 +241,20 @@ export class RestaurantService {
     return await this.restaurants.count({
       where: { category: { id: category.id } },
     });
+  }
+
+  async createDish(
+    createDishInput: CreateDishInput,
+  ): Promise<CreateDishOutput> {
+    try {
+      return {
+        ok: true,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e.message,
+      };
+    }
   }
 }
