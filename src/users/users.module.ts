@@ -4,9 +4,10 @@ import { User } from './entities/user.entity';
 import { UsersResolver } from './users.resolver';
 import { UsersService } from './users.service';
 import { Verification } from './entities/verification.entity';
+import { Order } from 'src/order/entites/order.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Verification])],
+  imports: [TypeOrmModule.forFeature([User, Verification, Order])],
   providers: [UsersResolver, UsersService],
   exports: [UsersService],
 })

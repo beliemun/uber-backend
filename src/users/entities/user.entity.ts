@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from '@nestjs/common';
 import { IsBoolean, IsEmail, IsEnum, IsString } from 'class-validator';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
+import { Order } from 'src/order/entites/order.entity';
 
 export enum UserRole {
   Client = 'Client',
@@ -52,6 +53,14 @@ export class User extends CoreEntity {
   @OneToMany(() => Restaurant, (restaurant) => restaurant.owner)
   @Field(() => [Restaurant])
   restaurants: Restaurant[];
+
+  @OneToMany(() => Order, (order) => order.customer)
+  @Field(() => [Order])
+  orders: Order[];
+
+  @OneToMany(() => Order, (order) => order.driver)
+  @Field(() => [Order])
+  rides: Order[];
 
   @BeforeInsert()
   @BeforeUpdate()
