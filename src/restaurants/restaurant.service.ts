@@ -8,6 +8,12 @@ import { Category } from './entities/category.entity';
 import { EditRestaurantInput } from './dto/edit-restaurant.dto';
 import { CategoryRepository } from './repositories/category.repository';
 import { DeleteRestaurantInput } from './dto/delete-restaurant.dto';
+import { GetCategoryInput, GetCategoryOutput } from './dto/get-category.dto';
+import {
+  GetRestaurantsInput,
+  GetRestaurantsOutput,
+} from './dto/get-restaurants.dto';
+import { GetRestaurantInput, GetRestaurantOutput } from './dto/get-restaurant.dto';
 
 @Injectable()
 export class RestaurantService {
@@ -101,12 +107,53 @@ export class RestaurantService {
     }
   }
 
-  async allCategories() {
-    const categories = await this.categories.find()
+  async getRestaurant({restaurantId}:GetRestaurantInput) : Promise<GetRestaurantOutput> {
+    try{
+      const restaurant = await this.restaurants.findOne({where:{id:restaurantId}});
+      if(!restaurant){
+        throw new Error("Restaurant not found.")
+      }
+      return {
+        ok:true,
+        restaurant
+      }
+    }catch(e){
+      return {
+        ok:false,
+        error:e.message
+      }
+    }
+  }
+
+  async getRestaurants({
+    page,
+  }: GetRestaurantsInput): Promise<GetRestaurantsOutput> {
+    try {
+      const [restaurants, totalItems] = await this.restaurants.findAndCount({
+        take: 10,
+        skip: (page - 1) * 10,
+        order: { createdAt: 'asc' },
+      });
+      return {
+        ok: true,
+        restaurants,
+        totalPages: Math.ceil(totalItems / 10),
+        totalItems,
+      };
+    } catch (e) {
+      return {
+        ok: true,
+        error: e.message,
+      };
+    }
+  }
+
+  async getCategories() {
+    const categories = await this.categories.find();
     try {
       return {
         ok: true,
-        categories
+        categories,
       };
     } catch (e) {
       return {
@@ -116,7 +163,42 @@ export class RestaurantService {
     }
   }
 
-  async countRestaurant(category:Category) :Promise<number>{
-    return await this.restaurants.count({where:{category}})
+  async getCategory({
+    slug,
+    page,
+  }: GetCategoryInput): Promise<GetCategoryOutput> {
+    try {
+      const category = await this.categories.findOne({
+        where: { slug },
+        // relations: ['restaurants'], 이렇게 하면 관련된 레스토랑이 많을 경우 DB가 저세상에 갈 수 있음
+      });
+      if (!category) {
+        throw new Error('Category not found.');
+      }
+      const restaurants = await this.restaurants.find({
+        where: { category: { id: category.id } },
+        take: 10,
+        skip: (page - 1) * 10,
+      });
+
+      const totalCount = await this.countRestaurant(category);
+      return {
+        ok: true,
+        category,
+        restaurants,
+        totalPages: Math.ceil(totalCount / 10),
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e.message,
+      };
+    }
+  }
+
+  async countRestaurant(category: Category): Promise<number> {
+    return await this.restaurants.count({
+      where: { category: { id: category.id } },
+    });
   }
 }

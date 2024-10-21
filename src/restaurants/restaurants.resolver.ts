@@ -19,6 +19,15 @@ import {
 } from './dto/delete-restaurant.dto';
 import { GetCategoriesOutput } from './dto/get-categories.dto';
 import { Category } from './entities/category.entity';
+import { GetCategoryInput, GetCategoryOutput } from './dto/get-category.dto';
+import {
+  GetRestaurantsInput,
+  GetRestaurantsOutput,
+} from './dto/get-restaurants.dto';
+import {
+  GetRestaurantInput,
+  GetRestaurantOutput,
+} from './dto/get-restaurant.dto';
 
 @Resolver(() => Restaurant)
 export class RestaurantsResolver {
@@ -56,6 +65,20 @@ export class RestaurantsResolver {
       deleteRestaurantInput,
     );
   }
+
+  @Query(() => GetRestaurantOutput)
+  getRestaurant(
+    @Args('input') getRestaurantInput: GetRestaurantInput,
+  ): Promise<GetRestaurantOutput> {
+    return this.restaurantService.getRestaurant(getRestaurantInput);
+  }
+
+  @Query(() => GetRestaurantsOutput)
+  getRestaurants(
+    @Args('input') getRestaurantsInput: GetRestaurantsInput,
+  ): Promise<GetRestaurantsOutput> {
+    return this.restaurantService.getRestaurants(getRestaurantsInput);
+  }
 }
 
 @Resolver(() => Category)
@@ -70,6 +93,13 @@ export class CatogoryResolver {
 
   @Query(() => GetCategoriesOutput)
   getCategories(): Promise<GetCategoriesOutput> {
-    return this.restaurantService.allCategories();
+    return this.restaurantService.getCategories();
+  }
+
+  @Query(() => GetCategoryOutput)
+  getCatogory(
+    @Args('input') getCategoryInput: GetCategoryInput,
+  ): Promise<GetCategoryOutput> {
+    return this.restaurantService.getCategory(getCategoryInput);
   }
 }
