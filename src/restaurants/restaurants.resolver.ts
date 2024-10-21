@@ -28,6 +28,7 @@ import {
   GetRestaurantInput,
   GetRestaurantOutput,
 } from './dto/get-restaurant.dto';
+import { SearchRestaurantsInput, SearchRestaurantsOutput } from './dto/search-restaurant.dto';
 
 @Resolver(() => Restaurant)
 export class RestaurantsResolver {
@@ -78,6 +79,13 @@ export class RestaurantsResolver {
     @Args('input') getRestaurantsInput: GetRestaurantsInput,
   ): Promise<GetRestaurantsOutput> {
     return this.restaurantService.getRestaurants(getRestaurantsInput);
+  }
+
+  @Query(()=>SearchRestaurantsOutput)
+  searchRestaurants(
+    @Args('input') searchRestaurantsInput:SearchRestaurantsInput
+  ) {
+    return this.restaurantService.searchRestaurants(searchRestaurantsInput)
   }
 }
 

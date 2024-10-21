@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Restaurant } from './entities/restaurant.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Like, Repository } from 'typeorm';
 import { CreateRestaurantInput } from './dto/create-restaurant.dto';
 import { User } from 'src/users/entities/user.entity';
 import { Category } from './entities/category.entity';
@@ -13,7 +13,14 @@ import {
   GetRestaurantsInput,
   GetRestaurantsOutput,
 } from './dto/get-restaurants.dto';
-import { GetRestaurantInput, GetRestaurantOutput } from './dto/get-restaurant.dto';
+import {
+  GetRestaurantInput,
+  GetRestaurantOutput,
+} from './dto/get-restaurant.dto';
+import {
+  SearchRestaurantsInput,
+  SearchRestaurantsOutput,
+} from './dto/search-restaurant.dto';
 
 @Injectable()
 export class RestaurantService {
@@ -107,21 +114,25 @@ export class RestaurantService {
     }
   }
 
-  async getRestaurant({restaurantId}:GetRestaurantInput) : Promise<GetRestaurantOutput> {
-    try{
-      const restaurant = await this.restaurants.findOne({where:{id:restaurantId}});
-      if(!restaurant){
-        throw new Error("Restaurant not found.")
+  async getRestaurant({
+    restaurantId,
+  }: GetRestaurantInput): Promise<GetRestaurantOutput> {
+    try {
+      const restaurant = await this.restaurants.findOne({
+        where: { id: restaurantId },
+      });
+      if (!restaurant) {
+        throw new Error('Restaurant not found.');
       }
       return {
-        ok:true,
-        restaurant
-      }
-    }catch(e){
+        ok: true,
+        restaurant,
+      };
+    } catch (e) {
       return {
-        ok:false,
-        error:e.message
-      }
+        ok: false,
+        error: e.message,
+      };
     }
   }
 
@@ -143,6 +154,33 @@ export class RestaurantService {
     } catch (e) {
       return {
         ok: true,
+        error: e.message,
+      };
+    }
+  }
+
+  async searchRestaurants({
+    query,
+    page,
+  }: SearchRestaurantsInput): Promise<SearchRestaurantsOutput> {
+    try {
+      const [restaurants, totalItems] = await this.restaurants.findAndCount({
+        where: {
+          name: ILike(`%${query}%`), // Like는 대소문자를 구분하고, ILike는 구분하지 않음.
+        },
+        take: 10,
+        skip: (page - 1) * 10,
+        order: { createdAt: 'ASC' },
+      });
+      return {
+        ok: true,
+        restaurants,
+        totalItems,
+        totalPages: Math.ceil(totalItems / 10),
+      };
+    } catch (e) {
+      return {
+        ok: false,
         error: e.message,
       };
     }
