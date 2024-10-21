@@ -3,26 +3,7 @@ import { IsNumber, IsString, Length } from 'class-validator';
 import { CoreEntity } from 'src/common/entities/core.entity';
 import { Column, Entity, ManyToOne, RelationId } from 'typeorm';
 import { Restaurant } from './restaurant.entity';
-
-@InputType('OptionDetailInputType', { isAbstract: true })
-@ObjectType()
-export class OptionDetail {
-  @Field(() => String)
-  name: string;
-  @Field(() => Number, { nullable: true })
-  extra?: number;
-}
-
-@InputType('DishOptionInputType', { isAbstract: true })
-@ObjectType()
-export class DishOption {
-  @Field(() => String)
-  name: string;
-  @Field(() => [OptionDetail], { nullable: true })
-  details?: OptionDetail[];
-  @Field(() => Number, { nullable: true })
-  extra?: number;
-}
+import { OrderItemOption } from 'src/order/entites/order-item.dto';
 
 @InputType('DishInputType', { isAbstract: true })
 @ObjectType()
@@ -59,6 +40,6 @@ export class Dish extends CoreEntity {
   restaurantId: number;
 
   @Column({ type: 'json', nullable: true })
-  @Field(() => [DishOption], { nullable: true })
-  options?: DishOption[];
+  @Field(() => [OrderItemOption], { nullable: true })
+  options?: OrderItemOption[];
 }
