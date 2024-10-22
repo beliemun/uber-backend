@@ -5,7 +5,7 @@ import { CoreOutput } from 'src/common/dto/output.dto';
 @InputType()
 export class GetOrdersInput {
   @Field(() => OrderStatus)
-  orderState: OrderStatus;
+  status: OrderStatus;
 }
 
 @ObjectType()

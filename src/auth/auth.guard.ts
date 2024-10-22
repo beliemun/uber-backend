@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { Observable } from 'rxjs';
 import { UserRoles } from './role.decorator';
-import { User, UserRole } from 'src/users/entities/user.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -26,7 +26,7 @@ export class AuthGuard implements CanActivate {
       return false;
     }
     // Role이 Any인 경우, 모든 유저에 대해 인가가 허락된다.
-    if (roles === 'Any') {
+    if (roles.includes('Any')) {
       return true;
     }
     // Decorator에 명시한 Role과 user의 role을 비교하여 인가를 허락하거나 거부한다.
