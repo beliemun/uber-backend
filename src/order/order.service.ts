@@ -3,10 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from './entites/order.entity';
 import { Repository } from 'typeorm';
 import { CreateOrderOutput, CreateOrderInput } from './dto/create-order.dto';
-import { User } from 'src/users/entities/user.entity';
+import { User, UserRole } from 'src/users/entities/user.entity';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
 import { OrderItem } from './entites/order-item.entity';
 import { Dish } from 'src/restaurants/entities/dish.entity';
+import { GetOrdersInput, GetOrdersOutput } from './dto/get-orders.dto';
 
 @Injectable()
 export class OrderService {
@@ -80,6 +81,42 @@ export class OrderService {
     } catch (e) {
       return {
         ok: false,
+        error: e.message,
+      };
+    }
+  }
+
+  async getOrders(
+    { id, role }: User,
+    { orderState }: GetOrdersInput,
+  ): Promise<GetOrdersOutput> {
+    try {
+      let orders: Order[] = [];
+      switch (role) {
+        case UserRole.Client:
+          orders = await this.orders.find({ where: { customer: { id } } });
+          break;
+        case UserRole.Driver:
+          orders = await this.orders.find({ where: { driver: { id } } });
+          break;
+        case UserRole.Owner:
+          const restaurants = await this.restaurants.find({
+            where: { ownerId: id },
+            order: { createdAt: 'ASC' },
+            take: 1,
+            relations: ['orders'],
+          });
+          orders = restaurants.map((restaurant) => restaurant.orders).flat();
+          break;
+      }
+
+      return {
+        ok: true,
+        orders,
+      };
+    } catch (e) {
+      return {
+        ok: true,
         error: e.message,
       };
     }

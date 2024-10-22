@@ -5,6 +5,7 @@ import { Column, Entity, ManyToOne, OneToMany, RelationId } from 'typeorm';
 import { Category } from './category.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Dish } from './dish.entity';
+import { Order } from 'src/order/entites/order.entity';
 
 // Ralation 연결 시 외부에서 Category가 Class인지, InputType인지, OutputType인지 알 수 없으므로 이름을 따로 정해준다.
 @InputType('RestaurantInputType', { isAbstract: true })
@@ -41,6 +42,10 @@ export class Restaurant extends CoreEntity {
   @RelationId((restaurant: Restaurant) => restaurant.owner)
   @Field(() => Number)
   ownerId: number;
+
+  @OneToMany(() => Order, (order) => order.restaurant)
+  @Field(() => [Order])
+  orders: Order[];
 
   @OneToMany(() => Dish, (dish) => dish.restaurant)
   @Field(() => [Dish])
