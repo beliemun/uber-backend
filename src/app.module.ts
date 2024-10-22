@@ -1,10 +1,5 @@
-import { ApolloDriver } from '@nestjs/apollo';
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
@@ -12,7 +7,6 @@ import * as Joi from 'joi';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities/user.entity';
 import { JwtModule } from './jwt/jwt.module';
-import { JwtMiddleware } from './jwt/jwt.middleware';
 import { Verification } from './users/entities/verification.entity';
 import { Restaurant } from './restaurants/entities/restaurant.entity';
 import { Category } from './restaurants/entities/category.entity';
@@ -40,10 +34,22 @@ import { OrderItem } from './order/entites/order-item.entity';
         TOKEN_SECRET_KEY: Joi.string().required(),
       }),
     }),
-    GraphQLModule.forRoot({
+    GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver, // driver를 Apollo 생성자를 통해 Nest 방식으로 사용.
       autoSchemaFile: true, // 일일이 Graphql 파일을 만들지 안도록 스키마 생성을 자동화. 메모리상에서 생성.
-      context: ({ req }) => ({ user: req['user'] }), // jwt.middleware에서 token에 의해 찾아낸 user는 graphql context에 의해 모든 resolver에 공유.
+      context: ({ req }) => {
+        // jwt.middleware에서 token에 의해 찾아낸 user는 graphql context에 의해 모든 resolver에 공유.
+        return { 'access-token': req.headers['access-token'] };
+      },
+      installSubscriptionHandlers: true,
+      subscriptions: {
+        'subscriptions-transport-ws': {
+          onConnect: (connectionParams) => {
+            console.log('connectionParams1', connectionParams);
+            return { 'access-token': connectionParams['access-token'] };
+          },
+        },
+      },
     }),
     TypeOrmModule.forRoot({
       // cross-env로 개발 환경에 따라 사용할 환경 변수를 설정.
@@ -76,12 +82,4 @@ import { OrderItem } from './order/entites/order-item.entity';
   controllers: [],
   providers: [],
 })
-export class AppModule implements NestModule {
-  // NestModule: middleware를 route에 적용하는 방법을 정의해주는 interface. NestModule은 interface로서 configure을 구현해야 함.
-  configure(consumer: MiddlewareConsumer) {
-    // 이 Middleware를 정확히 어떤 routes에 적용하고 싶은지 지정할 수 있다.  /graphl 경로 내 모든 요청에 대해서 jwtMiddleware를 거친도록 설정.
-    consumer
-      .apply(JwtMiddleware)
-      .forRoutes({ path: '/graphql', method: RequestMethod.ALL });
-  }
-}
+export class AppModule {}
