@@ -27,31 +27,53 @@ export class OrderService {
       const restaurant = await this.restaurants.findOne({
         where: { id: restaurantId },
       });
+      if (!restaurant) {
+        throw new Error('Restaurant not found.');
+      }
 
-      items.forEach(async (item) => {
+      let totalPrice = 0;
+      const orderItems: OrderItem[] = [];
+      for (const item of items) {
+        console.log(item);
+        // forEach는 return을 해도 실행을 막을 수 없기 때문에 for of 문을 사용.
         const dish = await this.dishes.findOne({ where: { id: item.dishId } });
         if (!dish) {
           throw new Error('Dish not found.');
         }
-        await this.orderItems.save(
+
+        for (const itemOption of item.options) {
+          const dishOption = dish.options.find(
+            (dishOption) => dishOption.name === itemOption.name,
+          );
+          if (dishOption.extra) {
+            totalPrice += dishOption.extra;
+          } else {
+            const dishOptionChoice = dishOption.choices.find(
+              (optionChoice) => optionChoice.name === itemOption.choice,
+            );
+            if (dishOptionChoice) {
+              totalPrice += dishOptionChoice.extra;
+            }
+          }
+        }
+        const orderItem = await this.orderItems.save(
           this.orderItems.create({
             dish,
             options: item.options,
           }),
         );
-      });
-
-      //   const order = await this.orders.save(
-      //     this.orders.create({
-      //       customer,
-      //       restaurant
-
-      //     }),
-      //   );
-      //   console.log(order);
-      if (!restaurant) {
-        throw new Error('Restaurant not found.');
+        orderItems.push(orderItem);
       }
+
+      await this.orders.save(
+        this.orders.create({
+          customer,
+          restaurant,
+          totalPrice,
+          items: orderItems,
+        }),
+      );
+
       return {
         ok: true,
       };
