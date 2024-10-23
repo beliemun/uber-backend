@@ -20,6 +20,7 @@ export class AuthGuard implements CanActivate {
     if (roles === undefined) {
       return true;
     }
+
     // context를 로그해보면 context가 http 형태로로 되어있기 때문에 graphql로 변경해야 함. (context의 user, token에 접근할 수 없는 형태.)
     const gqlContext = GqlExecutionContext.create(context).getContext();
     const token = gqlContext['access-token'];

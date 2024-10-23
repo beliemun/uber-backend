@@ -10,7 +10,11 @@ import { EditOrderInput, EditOrderOutput } from './dto/edit-order.dto';
 import { PubSub } from 'graphql-subscriptions';
 import { Role } from 'src/auth/role.decorator';
 import { Inject } from '@nestjs/common';
-import { PENDING_ORDER, PUB_SUB } from 'src/common/common.constants';
+import {
+  COOKED_ORDER,
+  PENDING_ORDER,
+  PUB_SUB,
+} from 'src/common/common.constants';
 
 export const pubsub = new PubSub();
 
@@ -22,6 +26,7 @@ export class OrderResolver {
   ) {}
 
   @Mutation(() => CreateOrderOutput)
+  @Role(['Client'])
   createOrder(
     @AuthUser() customer: User,
     @Args('input') createOrderInput: CreateOrderInput,
@@ -30,6 +35,7 @@ export class OrderResolver {
   }
 
   @Query(() => GetOrdersOutput)
+  @Role(['Any'])
   getOrders(
     @AuthUser() user: User,
     @Args('input') GetOrdersInput: GetOrdersInput,
@@ -38,6 +44,7 @@ export class OrderResolver {
   }
 
   @Query(() => GetOrderOutput)
+  @Role(['Any'])
   getOrder(
     @AuthUser() user: User,
     @Args('input') getOrderInput: GetOrderInput,
@@ -46,6 +53,7 @@ export class OrderResolver {
   }
 
   @Mutation(() => EditOrderOutput)
+  @Role(['Any'])
   editOrder(
     @AuthUser() user: User,
     @Args('input') editOrderInput: EditOrderInput,
@@ -63,7 +71,21 @@ export class OrderResolver {
     },
   })
   @Role(['Owner'])
-  pendingOder() {
+  pendingOrder() {
     return this.pubSub.asyncIterator(PENDING_ORDER);
+  }
+
+  @Subscription(() => Order, {
+    filter: () => {
+      return true;
+    },
+    resolve: ({ order }) => {
+      console.log(order)
+      return order;
+    },
+  })
+  @Role(['Driver'])
+  cookedOrder() {
+    return this.pubSub.asyncIterator(COOKED_ORDER);
   }
 }

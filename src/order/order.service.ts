@@ -11,7 +11,11 @@ import { GetOrdersInput, GetOrdersOutput } from './dto/get-orders.dto';
 import { GetOrderInput, GetOrderOutput } from './dto/get-order.dto';
 import { EditOrderInput } from './dto/edit-order.dto';
 import { PubSub } from 'graphql-subscriptions';
-import { PENDING_ORDER, PUB_SUB } from 'src/common/common.constants';
+import {
+  COOKED_ORDER,
+  PENDING_ORDER,
+  PUB_SUB,
+} from 'src/common/common.constants';
 
 @Injectable()
 export class OrderService {
@@ -79,7 +83,10 @@ export class OrderService {
         }),
       );
 
-      await this.pubSub.publish(PENDING_ORDER, { order, ownerId: restaurant.ownerId });
+      await this.pubSub.publish(PENDING_ORDER, {
+        order,
+        ownerId: restaurant.ownerId,
+      });
 
       return {
         ok: true,
@@ -154,12 +161,12 @@ export class OrderService {
       return false;
     }
     if (user.role === UserRole.Owner) {
-      if (status !== OrderStatus.Pending && status !== OrderStatus.Cooking) {
+      if (status !== OrderStatus.Cooking && status !== OrderStatus.Cooked) {
         return false;
       }
     }
     if (user.role === UserRole.Driver) {
-      if (status !== OrderStatus.Cooked && status !== OrderStatus.PickedUp) {
+      if (status !== OrderStatus.PickedUp && status !== OrderStatus.Delivered) {
         return false;
       }
     }
@@ -205,7 +212,11 @@ export class OrderService {
       if (!this.canSeeOrder(user, order) || !this.canEditOrder(user, status)) {
         throw new Error('You can not do that.');
       }
+      //  repository의 save는 완전한 order를 반환하지 않기 떄문에 order를 전달할 때 주의 한다.
       await this.orders.save({ id: order.id, status });
+      if (user.role === UserRole.Owner && status === OrderStatus.Cooked) {
+        this.pubSub.publish(COOKED_ORDER, { order: { ...order, status } });
+      }
       return {
         ok: true,
       };
