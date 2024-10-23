@@ -16,6 +16,7 @@ import { Dish } from './restaurants/entities/dish.entity';
 import { OrderModule } from './order/order.module';
 import { Order } from './order/entites/order.entity';
 import { OrderItem } from './order/entites/order-item.entity';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -45,7 +46,6 @@ import { OrderItem } from './order/entites/order-item.entity';
       subscriptions: {
         'subscriptions-transport-ws': {
           onConnect: (connectionParams) => {
-            console.log('connectionParams1', connectionParams);
             return { 'access-token': connectionParams['access-token'] };
           },
         },
@@ -78,6 +78,7 @@ import { OrderItem } from './order/entites/order-item.entity';
     UsersModule,
     RestaurantsModule,
     OrderModule,
+    CommonModule,
   ],
   controllers: [],
   providers: [],

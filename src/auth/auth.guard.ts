@@ -32,7 +32,6 @@ export class AuthGuard implements CanActivate {
           return false;
         }
         gqlContext['user'] = user;
-        console.log(user);
         // Role이 Any인 경우, 모든 유저에 대해 인가가 허락된다.
         if (roles.includes('Any')) {
           return true;

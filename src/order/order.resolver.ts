@@ -9,12 +9,17 @@ import { GetOrderInput, GetOrderOutput } from './dto/get-order.dto';
 import { EditOrderInput, EditOrderOutput } from './dto/edit-order.dto';
 import { PubSub } from 'graphql-subscriptions';
 import { Role } from 'src/auth/role.decorator';
+import { Inject } from '@nestjs/common';
+import { PENDING_ORDER, PUB_SUB } from 'src/common/common.constants';
 
 export const pubsub = new PubSub();
 
 @Resolver(() => Order)
 export class OrderResolver {
-  constructor(private readonly ordersService: OrderService) {}
+  constructor(
+    private readonly ordersService: OrderService,
+    @Inject(PUB_SUB) private readonly pubSub: PubSub,
+  ) {}
 
   @Mutation(() => CreateOrderOutput)
   createOrder(
@@ -48,15 +53,17 @@ export class OrderResolver {
     return this.ordersService.editOrder(user, editOrderInput);
   }
 
-  @Role(['Any'])
-  @Mutation(() => Boolean)
-  order() {
-    pubsub.publish('order', { orderSubscription: 'ready' });
-    return true;
-  }
-
-  @Subscription(() => String)
-  orderSubscription() {
-    return pubsub.asyncIterator('order');
+  @Subscription(() => Order, {
+    filter: ({ ownerId }, _, { user }) => {
+      // 고객이 주문한 식당의 주인(ownerId)과, 리스닝을 하고 있는 식당의 주인(user)이 같아야 패스.
+      return user.id === ownerId;
+    },
+    resolve: ({ order }) => {
+      return order;
+    },
+  })
+  @Role(['Owner'])
+  pendingOder() {
+    return this.pubSub.asyncIterator(PENDING_ORDER);
   }
 }

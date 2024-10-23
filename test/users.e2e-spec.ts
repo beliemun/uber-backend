@@ -210,13 +210,11 @@ describe('UserModule (e2e)', () => {
     beforeAll(async () => {
       const [user] = await usersRepository.find();
       userId = user.id;
-      console.log('userId:', userId);
 
       const verification = await verificationRepository.findOne({
         where: { user: { id: userId } },
       });
       code = verification.code;
-      console.log('code:', code);
     });
 
     it('should find an user.', () => {
@@ -449,7 +447,6 @@ describe('UserModule (e2e)', () => {
         })
         .expect(200)
         .expect((res) => {
-          console.log(res.body);
           const {
             data: {
               editProfile: { ok, error },

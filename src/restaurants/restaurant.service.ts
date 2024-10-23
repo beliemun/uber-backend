@@ -128,7 +128,6 @@ export class RestaurantsService {
         where: { id: restaurantId },
         relations: ['menu'],
       });
-      console.log(restaurant);
       if (!restaurant) {
         throw new Error('Restaurant not found.');
       }

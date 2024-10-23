@@ -22,7 +22,6 @@ export class UsersResolver {
   @Role(['Any'])
   @Query(() => User) // AuthGuard(auth.guard)를 만들어 UseGuards와 함께 사용하는 authentication.
   me(@AuthUser() authUser: User) {
-    console.log(authUser);
     // 직접 Decorator를 생성(auth-user.decorator.ts)하여 사용하는 authentication.
     return authUser;
   }
@@ -53,7 +52,6 @@ export class UsersResolver {
     @AuthUser() authUser: User,
     @Args('input') editProfileInput: EditProfileInput,
   ): Promise<EditProfileOutput> {
-    console.log(editProfileInput);
     return this.usersService.editProfile(authUser.id, editProfileInput);
   }
 
