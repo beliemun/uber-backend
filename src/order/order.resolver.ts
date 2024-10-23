@@ -17,6 +17,7 @@ import {
   UPDATE_ORDER,
 } from 'src/common/common.constants';
 import { UpdateOrderInput } from './dto/update-order.dto';
+import { TakeOrderInput, TakeOrderOutput } from './dto/take-order.dto';
 
 export const pubsub = new PubSub();
 
@@ -116,5 +117,14 @@ export class OrderResolver {
   updateOrder(@Args('input') updateOrderInput: UpdateOrderInput) {
     console.log('UPDATE_ORDER');
     return this.pubSub.asyncIterator(UPDATE_ORDER);
+  }
+
+  @Mutation(() => TakeOrderOutput)
+  @Role(['Driver'])
+  takeOrder(
+    @AuthUser() driver: User,
+    @Args('input') takeOrderInput: TakeOrderInput,
+  ) {
+    return this.ordersService.takeOrder(driver, takeOrderInput);
   }
 }

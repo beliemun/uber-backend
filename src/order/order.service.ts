@@ -17,6 +17,7 @@ import {
   PUB_SUB,
   UPDATE_ORDER,
 } from 'src/common/common.constants';
+import { TakeOrderInput } from './dto/take-order.dto';
 
 @Injectable()
 export class OrderService {
@@ -216,13 +217,41 @@ export class OrderService {
       //  repository의 save는 완전한 order를 반환하지 않기 떄문에 order를 전달할 때 주의 한다.
       await this.orders.save({ id: order.id, status });
 
-      const newOrder = { ...order, status };
+      order.status = status;
       if (user.role === UserRole.Owner && status === OrderStatus.Cooked) {
         // Driver에게만 전달.
-        this.pubSub.publish(COOKED_ORDER, { order: newOrder });
+        this.pubSub.publish(COOKED_ORDER, { order });
       }
       // 모두에게 전달.
-      await this.pubSub.publish(UPDATE_ORDER, { order: newOrder });
+      await this.pubSub.publish(UPDATE_ORDER, { order });
+      return {
+        ok: true,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e.message,
+      };
+    }
+  }
+
+  async takeOrder(driver: User, { id }: TakeOrderInput) {
+    try {
+      const order = await this.orders.findOne({ where: { id } });
+      if (!order) {
+        throw new Error('Order not found.');
+      }
+      if (order.driver) {
+        throw new Error('Driver already exists.');
+      }
+      order.driver = driver;
+      await this.orders.save([
+        {
+          id,
+          driver,
+        },
+      ]);
+      await this.pubSub.publish(UPDATE_ORDER, { order });
       return {
         ok: true,
       };
