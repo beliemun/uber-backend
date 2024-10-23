@@ -15,6 +15,7 @@ import {
   COOKED_ORDER,
   PENDING_ORDER,
   PUB_SUB,
+  UPDATE_ORDER,
 } from 'src/common/common.constants';
 
 @Injectable()
@@ -214,9 +215,14 @@ export class OrderService {
       }
       //  repository의 save는 완전한 order를 반환하지 않기 떄문에 order를 전달할 때 주의 한다.
       await this.orders.save({ id: order.id, status });
+
+      const newOrder = { ...order, status };
       if (user.role === UserRole.Owner && status === OrderStatus.Cooked) {
-        this.pubSub.publish(COOKED_ORDER, { order: { ...order, status } });
+        // Driver에게만 전달.
+        this.pubSub.publish(COOKED_ORDER, { order: newOrder });
       }
+      // 모두에게 전달.
+      await this.pubSub.publish(UPDATE_ORDER, { order: newOrder });
       return {
         ok: true,
       };

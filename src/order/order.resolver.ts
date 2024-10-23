@@ -14,7 +14,9 @@ import {
   COOKED_ORDER,
   PENDING_ORDER,
   PUB_SUB,
+  UPDATE_ORDER,
 } from 'src/common/common.constants';
+import { UpdateOrderInput } from './dto/update-order.dto';
 
 export const pubsub = new PubSub();
 
@@ -80,12 +82,39 @@ export class OrderResolver {
       return true;
     },
     resolve: ({ order }) => {
-      console.log(order)
       return order;
     },
   })
   @Role(['Driver'])
   cookedOrder() {
     return this.pubSub.asyncIterator(COOKED_ORDER);
+  }
+
+  @Subscription(() => Order, {
+    filter: (
+      { order }: { order: Order },
+      { input: { id } }: { input: UpdateOrderInput }, // Lisner가 Update 받을 Order의 Id
+      { user }: { user: User }, // Listener의 Context
+    ) => {
+      console.log(user.id, order.customerId);
+      console.log(user.id, order.driverId);
+      console.log(user.id, order.restaurant.ownerId);
+      if (
+        user.id !== order.customerId &&
+        user.id !== order.driverId &&
+        user.id !== order.restaurant.ownerId
+      ) {
+        return false;
+      }
+      return id === order.id; // 해당 주문이 Listnet가 원하는 주문인 경우
+    },
+    resolve: ({ order }) => {
+      return order;
+    },
+  })
+  @Role(['Any'])
+  updateOrder(@Args('input') updateOrderInput: UpdateOrderInput) {
+    console.log('UPDATE_ORDER');
+    return this.pubSub.asyncIterator(UPDATE_ORDER);
   }
 }
