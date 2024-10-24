@@ -12,8 +12,8 @@ import {
 import {
   Cron,
   CronExpression,
+  Interval,
   SchedulerRegistry,
-  Timeout,
 } from '@nestjs/schedule';
 
 @Resolver(() => Payment)
@@ -36,5 +36,10 @@ export class PaymentResolver {
   @Role(['Any'])
   getPayments(@AuthUser() user: User): Promise<GetPaymentsOutput> {
     return this.paymentsService.getPayments(user);
+  }
+
+  @Cron('* * */1 * * *')
+  checkPromotedRestaurants() {
+    return this.paymentsService.checkPromotedRestaurants();
   }
 }

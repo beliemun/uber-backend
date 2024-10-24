@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { Payment } from './entities/payment.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -73,6 +73,17 @@ export class PaymentService {
         ok: false,
         error: e.message,
       };
+    }
+  }
+
+  async checkPromotedRestaurants() {
+    const restaurants = await this.restaurants.find({
+      where: { isPromoted: true, promotedUntil: LessThan(new Date()) },
+    });
+    for (const restaurnt of restaurants) {
+      restaurnt.isPromoted = false;
+      restaurnt.promotedUntil = null;
+      await this.restaurants.save(restaurnt);
     }
   }
 }
