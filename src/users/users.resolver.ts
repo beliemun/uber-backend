@@ -19,7 +19,7 @@ import { Role } from 'src/auth/role.decorator';
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
 
-  @Role('Any')
+  @Role(['Any'])
   @Query(() => User) // AuthGuard(auth.guard)를 만들어 UseGuards와 함께 사용하는 authentication.
   me(@AuthUser() authUser: User) {
     // 직접 Decorator를 생성(auth-user.decorator.ts)하여 사용하는 authentication.
@@ -38,7 +38,7 @@ export class UsersResolver {
     return this.usersService.createAccount(createAccountInput);
   }
 
-  @Role('Any')
+  @Role(['Any'])
   @Query(() => GetUserProfileOutput)
   async userProfile(
     @Args('input') GetUserProfileInput: GetUserProfileInput,
@@ -46,13 +46,12 @@ export class UsersResolver {
     return this.usersService.getUserProfile(GetUserProfileInput);
   }
 
-  @Role('Any')
+  @Role(['Any'])
   @Mutation(() => EditProfileOutput)
   editProfile(
     @AuthUser() authUser: User,
     @Args('input') editProfileInput: EditProfileInput,
   ): Promise<EditProfileOutput> {
-    console.log(editProfileInput);
     return this.usersService.editProfile(authUser.id, editProfileInput);
   }
 

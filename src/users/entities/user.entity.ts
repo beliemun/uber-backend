@@ -10,6 +10,8 @@ import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from '@nestjs/common';
 import { IsBoolean, IsEmail, IsEnum, IsString } from 'class-validator';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
+import { Order } from 'src/order/entites/order.entity';
+import { Payment } from 'src/payments/entities/payment.entity';
 
 export enum UserRole {
   Client = 'Client',
@@ -53,6 +55,18 @@ export class User extends CoreEntity {
   @Field(() => [Restaurant])
   restaurants: Restaurant[];
 
+  @OneToMany(() => Order, (order) => order.customer)
+  @Field(() => [Order])
+  orders: Order[];
+
+  @OneToMany(() => Order, (order) => order.driver)
+  @Field(() => [Order])
+  rides: Order[];
+
+  @OneToMany(() => Payment, (payment) => payment.user, { eager: true })
+  @Field(() => [Payment])
+  payments: Payment[];
+
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword() {
@@ -60,7 +74,6 @@ export class User extends CoreEntity {
       try {
         this.password = await bcrypt.hash(this.password, 10);
       } catch (e) {
-        console.log(e);
         throw new InternalServerErrorException();
       }
     }
@@ -70,7 +83,6 @@ export class User extends CoreEntity {
     try {
       return bcrypt.compare(givenPassword, this.password);
     } catch (e) {
-      console.log(e);
       throw new InternalServerErrorException();
     }
   }

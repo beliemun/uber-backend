@@ -210,19 +210,17 @@ describe('UserModule (e2e)', () => {
     beforeAll(async () => {
       const [user] = await usersRepository.find();
       userId = user.id;
-      console.log('userId:', userId);
 
       const verification = await verificationRepository.findOne({
         where: { user: { id: userId } },
       });
       code = verification.code;
-      console.log('code:', code);
     });
 
     it('should find an user.', () => {
       return request(app.getHttpServer())
         .post(GRAPHQL_ENDPOINT)
-        .set('accessToken', token.toString())
+        .set('access-token', token.toString())
         .send({
           query: `
             {
@@ -257,7 +255,7 @@ describe('UserModule (e2e)', () => {
     it('should not find any user.', () => {
       return request(app.getHttpServer())
         .post(GRAPHQL_ENDPOINT)
-        .set('accessToken', token.toString())
+        .set('access-token', token.toString())
         .send({
           query: `
           {
@@ -297,7 +295,7 @@ describe('UserModule (e2e)', () => {
     it('should find my profile', () => {
       return request(app.getHttpServer())
         .post(GRAPHQL_ENDPOINT)
-        .set('accessToken', token.toString())
+        .set('access-token', token.toString())
         .send({
           query: `
           {
@@ -347,7 +345,7 @@ describe('UserModule (e2e)', () => {
     it('should change verified status to true.', () => {
       return request(app.getHttpServer())
         .post(GRAPHQL_ENDPOINT)
-        .set('accessToken', token.toString())
+        .set('access-token', token.toString())
         .send({
           query: `
           mutation {
@@ -376,7 +374,7 @@ describe('UserModule (e2e)', () => {
     it('should not change verified status with a wrong code.', () => {
       return request(app.getHttpServer())
         .post(GRAPHQL_ENDPOINT)
-        .set('accessToken', token.toString())
+        .set('access-token', token.toString())
         .send({
           query: `
           mutation {
@@ -434,7 +432,7 @@ describe('UserModule (e2e)', () => {
     it('should fail if the email exist.', () => {
       return request(app.getHttpServer())
         .post(GRAPHQL_ENDPOINT)
-        .set('accessToken', token.toString())
+        .set('access-token', token.toString())
         .send({
           query: `
           mutation{
@@ -449,7 +447,6 @@ describe('UserModule (e2e)', () => {
         })
         .expect(200)
         .expect((res) => {
-          console.log(res.body);
           const {
             data: {
               editProfile: { ok, error },
@@ -463,7 +460,7 @@ describe('UserModule (e2e)', () => {
     it('should edit email in my profile', () => {
       return request(app.getHttpServer())
         .post(GRAPHQL_ENDPOINT)
-        .set('accessToken', token.toString())
+        .set('access-token', token.toString())
         .send({
           query: `
           mutation{

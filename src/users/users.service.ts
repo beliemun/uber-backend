@@ -136,7 +136,6 @@ export class UsersService {
       const user = await this.users.findOne({ where: { id } });
       if (email) {
         const exist = await this.users.findOne({ where: { email } });
-        console.log('exist', exist);
         if (exist) {
           throw new Error('The email is already exist.');
         }
