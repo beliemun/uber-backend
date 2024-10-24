@@ -57,4 +57,12 @@ export class Restaurant extends CoreEntity {
   // 이 앱에서는 유저의 결제 내역은 중요하지만, 레스토랑의 결제 내역은 중요하게 생각하지 않는다.
   @Field(() => [Payment])
   payments: Payment[];
+
+  @Column({ default: false })
+  @Field(() => Boolean)
+  isPromoted: boolean;
+
+  @Column({ nullable: true })
+  @Field(() => Date, { nullable: true })
+  promotedUntil?: Date;
 }

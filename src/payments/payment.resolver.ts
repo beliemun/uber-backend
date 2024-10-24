@@ -9,10 +9,19 @@ import {
   CreatePaymentInput,
   CreatePaymentOutput,
 } from './dto/create-payment.dto';
+import {
+  Cron,
+  CronExpression,
+  SchedulerRegistry,
+  Timeout,
+} from '@nestjs/schedule';
 
 @Resolver(() => Payment)
 export class PaymentResolver {
-  constructor(private readonly paymentsService: PaymentService) {}
+  constructor(
+    private readonly paymentsService: PaymentService,
+    private readonly schedulerRegistry: SchedulerRegistry,
+  ) {}
 
   @Mutation(() => CreatePaymentOutput)
   @Role(['Owner'])

@@ -32,6 +32,13 @@ export class PaymentService {
       if (owner.id !== restaurant.ownerId) {
         throw new Error('You are not allowed to do this.');
       }
+
+      const date = new Date();
+      date.setDate(date.getDate() + 7);
+      restaurant.isPromoted = true;
+      restaurant.promotedUntil = date;
+      await this.restaurants.save(restaurant);
+
       await this.payments.save(
         this.payments.create({
           restaurant,
@@ -39,6 +46,7 @@ export class PaymentService {
           user: owner,
         }),
       );
+
       return {
         ok: true,
       };
@@ -51,7 +59,6 @@ export class PaymentService {
   }
 
   async getPayments(user: User): Promise<GetPaymentsOutput> {
-
     const payments = await this.payments.find({ where: { userId: user.id } });
     if (payments.length === 0) {
       throw new Error('Payments not found.');
