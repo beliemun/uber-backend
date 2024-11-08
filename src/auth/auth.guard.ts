@@ -48,7 +48,6 @@ export class AuthGuard implements CanActivate {
       } catch (e) {}
     } else {
       // Role Decorator가 있는데 User 정보가 없을 경우
-      console.log(3);
       return false;
     }
   }

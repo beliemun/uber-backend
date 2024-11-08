@@ -14,6 +14,10 @@ import {
 import { EditProfileInput, EditProfileOutput } from './dto/edit-profile.dto';
 import { VerifyEmailInput, VerifyEmailOutput } from './dto/verify-email.dto';
 import { Role } from 'src/auth/role.decorator';
+import {
+  RequestRefreshTokenInput,
+  RequestRefreshTokenOutput,
+} from './dto/request-refresh-token.dto';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -24,6 +28,13 @@ export class UsersResolver {
   me(@AuthUser() authUser: User) {
     // 직접 Decorator를 생성(auth-user.decorator.ts)하여 사용하는 authentication.
     return authUser;
+  }
+
+  @Mutation(() => RequestRefreshTokenOutput)
+  requestRefreshToken(
+    @Args('input') requestRefreshToken: RequestRefreshTokenInput,
+  ): Promise<RequestRefreshTokenOutput> {
+    return this.usersService.requestRefreshToken(requestRefreshToken);
   }
 
   @Mutation(() => SignInOutput)

@@ -1,3 +1,5 @@
+// 더 이상 사용되지 않은 미들웨어
+
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import { JwtService } from './jwt.service';
@@ -11,10 +13,9 @@ export class JwtMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
-    console.log('***', req.headers);
     if ('access-token' in req.headers) {
       const token = req.headers['access-token'];
-      console.log('token', token);
+
       try {
         const decoded = this.jwtService.verify(token.toString());
         if (typeof decoded === 'object' && decoded.hasOwnProperty('id')) {

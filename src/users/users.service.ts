@@ -15,6 +15,10 @@ import {
   GetUserProfileInput,
   GetUserProfileOutput,
 } from './dto/get-user-profile.dto';
+import {
+  RequestRefreshTokenInput,
+  RequestRefreshTokenOutput,
+} from './dto/request-refresh-token.dto';
 
 @Injectable()
 export class UsersService {
@@ -73,7 +77,7 @@ export class UsersService {
       //     this.config.get('TOKEN_SECRET_KEY'),
       //   );
       // 2. Jwt Dynamic Module을 직접만들어 가져올 수 있다. Config보다 불편하지만 다른 프로젝트에서 그대로 사용할 수 있다.
-      const accessToken = this.jwtService.sign({ id: user.id }, '1d');
+      const accessToken = this.jwtService.sign({ id: user.id }, '1s');
       const refreshToken = this.jwtService.sign({ id: user.id }, '1d');
       return {
         ok: true,
@@ -141,7 +145,6 @@ export class UsersService {
         if (exist) {
           throw new Error('The email is already exist.');
         }
-
         user.email = email;
         user.verified = false;
         await this.verifications.save(this.verifications.create({ user }));
@@ -184,6 +187,29 @@ export class UsersService {
       return {
         ok: true,
       };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e.message,
+      };
+    }
+  }
+
+  async requestRefreshToken(
+    input: RequestRefreshTokenInput,
+  ): Promise<RequestRefreshTokenOutput> {
+    try {
+      const decoded = this.jwtService.verify(input.refreshToken);
+      if (typeof decoded === 'object' && decoded.hasOwnProperty('id')) {
+        const accessToken = this.jwtService.sign({ id: decoded['id'] }, '1m');
+        const refreshToken = this.jwtService.sign({ id: decoded['id'] }, '10m');
+        return {
+          ok: true,
+          accessToken,
+          refreshToken,
+        };
+      }
+      throw new Error('Invalied Token.');
     } catch (e) {
       return {
         ok: false,
