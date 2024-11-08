@@ -201,7 +201,7 @@ export class UsersService {
     try {
       const decoded = this.jwtService.verify(input.refreshToken);
       if (typeof decoded === 'object' && decoded.hasOwnProperty('id')) {
-        const accessToken = this.jwtService.sign({ id: decoded['id'] }, '1m');
+        const accessToken = this.jwtService.sign({ id: decoded['id'] }, '1s');
         const refreshToken = this.jwtService.sign({ id: decoded['id'] }, '10m');
         return {
           ok: true,
