@@ -11,8 +11,10 @@ export class JwtMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
+    console.log('***', req.headers);
     if ('access-token' in req.headers) {
       const token = req.headers['access-token'];
+      console.log('token', token);
       try {
         const decoded = this.jwtService.verify(token.toString());
         if (typeof decoded === 'object' && decoded.hasOwnProperty('id')) {

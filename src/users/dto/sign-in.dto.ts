@@ -10,5 +10,9 @@ export class SignInInput extends PickType(User, ['email', 'password']) {}
 export class SignInOutput extends CoreOutput {
   @Field(() => String, { nullable: true })
   @IsString()
-  token?: string;
+  accessToken?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsString()
+  refreshToken?: string;
 }

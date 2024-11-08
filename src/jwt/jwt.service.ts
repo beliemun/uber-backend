@@ -9,8 +9,8 @@ export class JwtService {
     @Inject(CONFIG_OPTION) private readonly options: JwtModuleOptions,
   ) {}
 
-  sign(payload: object): string {
-    return jwt.sign(payload, this.options.tokenSecretKey);
+  sign(payload: object, expiresIn?: string | number): string {
+    return jwt.sign(payload, this.options.tokenSecretKey, { expiresIn });
   }
 
   verify(token: string) {

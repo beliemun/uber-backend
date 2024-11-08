@@ -73,10 +73,12 @@ export class UsersService {
       //     this.config.get('TOKEN_SECRET_KEY'),
       //   );
       // 2. Jwt Dynamic Module을 직접만들어 가져올 수 있다. Config보다 불편하지만 다른 프로젝트에서 그대로 사용할 수 있다.
-      const token = this.jwtService.sign({ id: user.id });
+      const accessToken = this.jwtService.sign({ id: user.id }, '1d');
+      const refreshToken = this.jwtService.sign({ id: user.id }, '1d');
       return {
         ok: true,
-        token,
+        accessToken,
+        refreshToken,
       };
     } catch (e) {
       return {
