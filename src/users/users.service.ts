@@ -79,11 +79,17 @@ export class UsersService {
       // 2. Jwt Dynamic Module을 직접만들어 가져올 수 있다. Config보다 불편하지만 다른 프로젝트에서 그대로 사용할 수 있다.
       const accessToken = this.jwtService.sign({ id: user.id }, '1s');
       const refreshToken = this.jwtService.sign({ id: user.id }, '1d');
-      return {
-        ok: true,
-        accessToken,
-        refreshToken,
-      };
+      return new Promise((resolve) =>
+        setTimeout(
+          () =>
+            resolve({
+              ok: true,
+              accessToken,
+              refreshToken,
+            }),
+          2000,
+        ),
+      );
     } catch (e) {
       return {
         ok: false,
